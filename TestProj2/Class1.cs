@@ -2,40 +2,29 @@
 
 namespace TestProj2  // Example namespace
 {
-    public class Address
+    public interface IDataService
     {
-        public string Street { get; set; }
-        public int HouseNumber { get; set; }
-        public string City { get; set; }
-    }
-
-    public class Person
-    {
-        public string Name { get; set; }
-        public int Age { get; set; }
-        public Address Address { get; set; }
-
-        public void UpdateAddress(Address address)
-        {
-            this.Address = address;
-        }
+        string GetData();
     }
 
     public class MyService
     {
-        public void ProcessPerson(Person person)
+        private readonly IDataService _dataService;
+
+        public MyService(IDataService dataService)
         {
-            // ... use the person object
+            _dataService = dataService;
         }
 
-        public void UpdatePersonAddress(Person person)
+        public string ProcessData()
         {
-            person.UpdateAddress(new Address { Street = "New Street" });
+            return _dataService.GetData().ToUpper();
         }
 
-        public int[] GetEvenNumbers(int limit)
+        public void LogData(IDataService dataService)
         {
-            return Enumerable.Range(1, limit).Where(x => x % 2 == 0).ToArray();
+            string data = dataService.GetData();
+            // ... logging logic
         }
     }
 }

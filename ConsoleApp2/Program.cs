@@ -167,33 +167,33 @@ public class {testClassName}
             string arrangeCode = "";
             var parameters = methodDeclaration.ParameterList.Parameters;
 
-            var theoryAttribute = methodDeclaration.AttributeLists
-                .SelectMany(al => al.Attributes)
-                .FirstOrDefault(a => a.Name.ToString() == "Theory");
-
-            if (theoryAttribute != null)
-            {
-                // ... (Theory/InlineData handling remains the same - if you are using it)
-            }
-            Assembly assembly;
-            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\TestProj2.dll");
+            // ... (Theory attribute handling - if applicable)
 
             foreach (var parameter in parameters)
             {
-                var typeName = parameter?.Type.ToString();
+                var typeName = parameter.Type.ToString();
 
-                var tyepss = assembly.GetTypes();
-                var type = tyepss.Where(x => x.Name == typeName).FirstOrDefault();// assembly.GetType("MyProject."+typeName); // Now get the type
+                if (IsInterface(typeName))
+                {
+                    arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n";
 
+                    // *** IMPORTANT: Set up mock behavior here ***
+                    // Example (replace with your actual setup):
+                    // if (typeName == "IDataService")
+                    // {
+                    //     arrangeCode += $"mock{parameter.Identifier.Text}.Setup(x => x.GetData()).Returns(\"Mocked Data\");\n";
+                    // }
 
-                if (!IsInterface(typeName) && !IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
+                    arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
+                }
+                else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
                 {
                     arrangeCode += $"var {parameter.Identifier.Text} = new {typeName}();\n";
 
-                    //var type = Type.GetType(typeName);
+                    var type = Type.GetType(typeName);
                     if (type != null)
                     {
-                        arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type, tyepss); // Call the recursive function
+                        arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type);
                     }
                     else
                     {
@@ -205,88 +205,6 @@ public class {testClassName}
                     arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
                 }
             }
-
-            //foreach (var parameter in parameters)
-            //{
-            //    var typeName = parameter.Type.ToString();
-
-            //    if (!IsInterface(typeName) && !IsPredefinedType(typeName))
-            //    {
-            //        arrangeCode += $"var {parameter.Identifier.Text} = new {typeName}();\n";
-
-            //        // *** Load the assembly (using the most robust approach - Assembly.Load) ***
-            //        var assemblyName = GetAssemblyName(typeName); // Helper to extract assembly name
-            //        if (assemblyName != null)
-            //        {
-            //            try
-            //            {
-            //                //var types= Type.GetType("MyProject.Person");
-            //                //var assembly = Assembly.Load("MyProject"); // Try loading by name first
-            //                Assembly assembly;
-            //                assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\TestProj2.dll");
-
-            //                if (assembly == null) // If loading by name fails, try loading from the current directory
-            //                {
-            //                    string assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), $"{assemblyName.Name}.dll");
-            //                    if (File.Exists(assemblyPath))
-            //                    {
-            //                        assembly = Assembly.LoadFrom(assemblyPath);
-            //                    }
-            //                }
-
-            //                if (assembly != null)
-            //                {
-            //                    var tyepss= assembly.GetTypes();
-
-            //                    var type = tyepss.Where(x => x.Name == typeName).FirstOrDefault();// assembly.GetType("MyProject."+typeName); // Now get the type
-
-            //                    if (type != null)
-            //                    {
-            //                        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            //                        foreach (var property in properties)
-            //                        {
-            //                            var innerttype = tyepss.Where(x => x.Name == property.PropertyType.Name.ToString()).FirstOrDefault();
-            //                            if (innerttype != null)
-            //                            {
-            //                                var subproperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            //                                foreach (var property2 in subproperties)
-            //                                {
-            //                                }
-            //                            }
-            //                            var propertyType = property.PropertyType.Name.ToString();
-            //                            var defaultValue = GetDefaultValue(propertyType);
-            //                            arrangeCode += $"{parameter.Identifier.Text}.{property.Name} = {defaultValue};\n";
-            //                        }
-            //                    }
-            //                    else
-            //                    {
-            //                        arrangeCode += $"// WARNING: Could not load type {typeName} from assembly {assemblyName.FullName}.\n";
-            //                    }
-            //                }
-            //                else
-            //                {
-            //                    arrangeCode += $"// WARNING: Could not load assembly {assemblyName.FullName}.\n";
-            //                }
-
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                arrangeCode += $"// ERROR loading assembly: {ex.Message}\n";
-            //            }
-            //        }
-            //        else
-            //        {
-            //            arrangeCode += $"// WARNING: Could not determine assembly name for type {typeName}.\n";
-            //        }
-
-
-            //    }
-            //    else
-            //    {
-            //        arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
-            //    }
-            //}
 
             string singleTestMethod = $@"
     [Fact]
@@ -305,7 +223,7 @@ public class {testClassName}
             return singleTestMethod;
         }
 
-        
+
 
         private static string GenerateTestData(TypeSyntax type)
         {
