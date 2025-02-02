@@ -445,77 +445,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
 
 
-            var className = GetClassName(methodDeclaration);  // Or however you get the class name
-            if (!methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword))
-            {
-
-                var constructor = GetConstructor(className); // Get the constructor info.
-                if (constructor != null)
-                {
-                    arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
-
-                    bool firstParameter = true;
-                    foreach (var parameter in constructor.GetParameters()) // Iterate over constructor parameters
-                    {
-                        if (!firstParameter)
-                        {
-                            arrangeCode += ", ";
-                        }
-
-                        var parameterType = parameter.ParameterType;
-                        var parameterName = parameter.Name;
-
-                        if (parameterType.IsInterface) // Check if constructor parameter is an interface
-                        {
-                            string mockVariableName = $"mock{parameterName}"; // Consistent naming
-                            arrangeCode += $"new Mock<{parameterType.Name}>().Object"; // Create and use the mock object directly
-                        }
-                        else
-                        {
-                            // Handle concrete types. You might need to create instances or use default values.
-                            // Example:
-                            if (parameterType == typeof(string))
-                            {
-                                arrangeCode += $"\"{parameterName}Value\""; // Or some default string value
-                            }
-                            else if (parameterType == typeof(int))
-                            {
-                                arrangeCode += $"123"; // Or some default int value
-                            }
-                            else
-                            {
-                                arrangeCode += $"default({parameterType.Name})"; // Default value for other types
-                            }
-
-                        }
-
-
-                        firstParameter = false;
-                    }
-
-                    arrangeCode += ");\n\n"; // Close constructor call
-                }
-                else
-                {
-                    arrangeCode += $"// WARNING: Could not find a suitable constructor for {className}.\n";
-                }
-                //arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
-
-                //// Add parameters to the constructor call
-                //bool firstParameter = true;
-                //foreach (var parameter in parameters)
-                //{
-                //    if (!firstParameter)
-                //    {
-                //        arrangeCode += ", ";
-                //    }
-
-                //    arrangeCode += parameter.Identifier.Text;
-                //    firstParameter = false;
-                //}
-
-                //arrangeCode += ");\n\n"; // Close constructor call
-            }
+           
 
             string singleTestMethod = $@"
     [Fact]
@@ -564,7 +494,6 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
         private static string GenerateActSection(string className, string methodName, MethodDeclarationSyntax methodDeclaration)
         {
-
             string actCode = "";
             var parameters = methodDeclaration.ParameterList.Parameters;
 
@@ -578,96 +507,74 @@ mock{mockName}.Setup(x => x.{methodName}(";
             }
             else
             {
-                // Instance method call - use the instance created in Arrange
+                // Instance method call - create a new instance in Act
 
-                // *** KEY CHANGE: Pass constructor parameters to MyService in Act ***
-                actCode += $"var result = new {className}(";
-
-                bool firstParameter = true;
-                foreach (var parameter in parameters)
+                // *** KEY CHANGE: Use constructor parameters to create mocks if needed, directly in Act ***
+                var constructor = GetConstructor(className); // Get the constructor info.
+                if (constructor != null)
                 {
-                    if (!firstParameter)
+                    actCode += $"var result = new {className}(";
+
+                    bool firstParameter = true;
+                    foreach (var parameter in constructor.GetParameters()) // Iterate over constructor parameters
                     {
-                        actCode += ", ";
+                        if (!firstParameter)
+                        {
+                            actCode += ", ";
+                        }
+
+                        var parameterType = parameter.ParameterType;
+                        var parameterName = parameter.Name;
+
+                        if (parameterType.IsInterface) // Check if constructor parameter is an interface
+                        {
+                            actCode += $"new Mock<{parameterType.Name}>().Object"; // Create and use the mock object directly
+                        }
+                        else
+                        {
+                            // Handle concrete types.  Expand this as needed.
+                            if (parameterType == typeof(string))
+                            {
+                                actCode += $"\"{parameterName}Value\""; // Or some default string value
+                            }
+                            else if (parameterType == typeof(int))
+                            {
+                                actCode += $"123"; // Or some default int value
+                            }
+                            else
+                            {
+                                actCode += $"default({parameterType.Name})"; // Default value for other types
+                            }
+                        }
+
+                        firstParameter = false;
                     }
 
-                    actCode += parameter.Identifier.Text;
-                    firstParameter = false;
+                    actCode += $").{methodName}("; // Call the method on the new instance
                 }
-                actCode += $").{methodName}(";  // Call the method on the newly created instance
+                else
+                {
+                    actCode += $"// WARNING: Could not find a suitable constructor for {className}.\n";
+                    return actCode; // Return early if no constructor is found.
+                }
+
 
             }
 
-
-            bool firstParameterCall = true; // Flag for method call parameters (distinct from constructor parameters)
+            bool firstMethodParameter = true; // Separate flag for method parameters
             foreach (var parameter in parameters)
             {
-                if (!firstParameterCall)
+                if (!firstMethodParameter)
                 {
                     actCode += ", ";
                 }
-
                 actCode += parameter.Identifier.Text;
-                firstParameterCall = false;
+                firstMethodParameter = false;
             }
 
             actCode += ");\n";
 
             return actCode;
-
-            //string actCode = "";
-            //var parameters = methodDeclaration.ParameterList.Parameters;
-
-            //// Check if the method is static
-            //bool isStatic = methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
-
-            //if (isStatic)
-            //{
-            //    // Static method call
-            //    actCode += $"var result = {className}.{methodName}(";
-            //}
-            //else
-            //{
-            //    // Instance method call - use the instance created in Arrange
-            //    actCode += $"var result = {className.ToLower()}Instance.{methodName}("; // Use the instance
-            //}
-
-
-            //bool firstParameter = true;
-            //foreach (var parameter in parameters)
-            //{
-            //    if (!firstParameter)
-            //    {
-            //        actCode += ", ";
-            //    }
-
-            //    actCode += parameter.Identifier.Text;
-            //    firstParameter = false;
-            //}
-
-            //actCode += ");\n";
-
-            //return actCode;
-
-            //var classDeclaration = methodDeclaration.Parent as ClassDeclarationSyntax;
-
-            //if (classDeclaration != null)
-            //{
-            //    if (methodDeclaration.ReturnType.ToString() != "void")
-            //    {
-            //        actCode = $"var result = new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-            //    }
-            //    else
-            //    {
-            //        actCode = $"new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-            //    }
-            //}
-            //else
-            //{
-            //    actCode = "// Error: Could not determine class name.\n";
-            //}
-
-            //return actCode;
         }
 
         private static string GenerateAssertSection(MethodDeclarationSyntax methodDeclaration, string expectedValue, List<string> parameterNames, int argumentCount)
