@@ -362,9 +362,10 @@ mock{mockName}.Setup(x => x.{methodName}(";
                         {
                             arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData",methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
                         }
+                        arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
                     }
-
-                    arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
+                     
+                    //arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
                     
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
@@ -407,6 +408,29 @@ mock{mockName}.Setup(x => x.{methodName}(";
                 {
                     arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
                 }
+            }
+
+
+
+            var className = GetClassName(methodDeclaration);  // Or however you get the class name
+            if (!methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword))
+            {
+                arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
+
+                // Add parameters to the constructor call
+                bool firstParameter = true;
+                foreach (var parameter in parameters)
+                {
+                    if (!firstParameter)
+                    {
+                        arrangeCode += ", ";
+                    }
+
+                    arrangeCode += parameter.Identifier.Text;
+                    firstParameter = false;
+                }
+
+                arrangeCode += ");\n\n"; // Close constructor call
             }
 
             string singleTestMethod = $@"
@@ -457,27 +481,58 @@ mock{mockName}.Setup(x => x.{methodName}(";
         private static string GenerateActSection(string className, string methodName, MethodDeclarationSyntax methodDeclaration)
         {
             string actCode = "";
-            string parameters = string.Join(", ", methodDeclaration.ParameterList.Parameters.Select(p => p.Identifier.Text));
+            var parameters = methodDeclaration.ParameterList.Parameters;
 
-            var classDeclaration = methodDeclaration.Parent as ClassDeclarationSyntax;
+            // Check if the method is static
+            bool isStatic = methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
 
-            if (classDeclaration != null)
+            if (isStatic)
             {
-                if (methodDeclaration.ReturnType.ToString() != "void")
-                {
-                    actCode = $"var result = new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-                }
-                else
-                {
-                    actCode = $"new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-                }
+                // Static method call
+                actCode += $"var result = {className}.{methodName}(";
             }
             else
             {
-                actCode = "// Error: Could not determine class name.\n";
+                // Instance method call - use the instance created in Arrange
+                actCode += $"var result = {className.ToLower()}Instance.{methodName}("; // Use the instance
             }
 
+
+            bool firstParameter = true;
+            foreach (var parameter in parameters)
+            {
+                if (!firstParameter)
+                {
+                    actCode += ", ";
+                }
+
+                actCode += parameter.Identifier.Text;
+                firstParameter = false;
+            }
+
+            actCode += ");\n";
+
             return actCode;
+
+            //var classDeclaration = methodDeclaration.Parent as ClassDeclarationSyntax;
+
+            //if (classDeclaration != null)
+            //{
+            //    if (methodDeclaration.ReturnType.ToString() != "void")
+            //    {
+            //        actCode = $"var result = new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
+            //    }
+            //    else
+            //    {
+            //        actCode = $"new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
+            //    }
+            //}
+            //else
+            //{
+            //    actCode = "// Error: Could not determine class name.\n";
+            //}
+
+            //return actCode;
         }
 
         private static string GenerateAssertSection(MethodDeclarationSyntax methodDeclaration, string expectedValue, List<string> parameterNames, int argumentCount)
