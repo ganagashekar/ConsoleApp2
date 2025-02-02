@@ -326,6 +326,17 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             return setupCode;
         }
+
+        private static ConstructorInfo GetConstructor(string className)
+        {
+            var type = Type.GetType(className);
+            if (type != null)
+            {
+                return type.GetConstructors().FirstOrDefault(); // Get the first constructor (you can add logic to choose a specific one)
+            }
+            return null;
+        }
+
         private static T CreateAndInitialize<T>(Type type, Type[] tyepss) where T : class
         {
             T returnObject = Activator.CreateInstance<T>();
@@ -480,6 +491,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
         private static string GenerateActSection(string className, string methodName, MethodDeclarationSyntax methodDeclaration)
         {
+
             string actCode = "";
             var parameters = methodDeclaration.ParameterList.Parameters;
 
@@ -494,25 +506,75 @@ mock{mockName}.Setup(x => x.{methodName}(";
             else
             {
                 // Instance method call - use the instance created in Arrange
-                actCode += $"var result = {className.ToLower()}Instance.{methodName}("; // Use the instance
+
+                // *** KEY CHANGE: Pass constructor parameters to MyService in Act ***
+                actCode += $"var result = new {className}(";
+
+                bool firstParameter = true;
+                foreach (var parameter in parameters)
+                {
+                    if (!firstParameter)
+                    {
+                        actCode += ", ";
+                    }
+
+                    actCode += parameter.Identifier.Text;
+                    firstParameter = false;
+                }
+                actCode += $").{methodName}(";  // Call the method on the newly created instance
+
             }
 
 
-            bool firstParameter = true;
+            bool firstParameterCall = true; // Flag for method call parameters (distinct from constructor parameters)
             foreach (var parameter in parameters)
             {
-                if (!firstParameter)
+                if (!firstParameterCall)
                 {
                     actCode += ", ";
                 }
 
                 actCode += parameter.Identifier.Text;
-                firstParameter = false;
+                firstParameterCall = false;
             }
 
             actCode += ");\n";
 
             return actCode;
+
+            //string actCode = "";
+            //var parameters = methodDeclaration.ParameterList.Parameters;
+
+            //// Check if the method is static
+            //bool isStatic = methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
+
+            //if (isStatic)
+            //{
+            //    // Static method call
+            //    actCode += $"var result = {className}.{methodName}(";
+            //}
+            //else
+            //{
+            //    // Instance method call - use the instance created in Arrange
+            //    actCode += $"var result = {className.ToLower()}Instance.{methodName}("; // Use the instance
+            //}
+
+
+            //bool firstParameter = true;
+            //foreach (var parameter in parameters)
+            //{
+            //    if (!firstParameter)
+            //    {
+            //        actCode += ", ";
+            //    }
+
+            //    actCode += parameter.Identifier.Text;
+            //    firstParameter = false;
+            //}
+
+            //actCode += ");\n";
+
+            //return actCode;
 
             //var classDeclaration = methodDeclaration.Parent as ClassDeclarationSyntax;
 

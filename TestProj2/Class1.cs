@@ -4,7 +4,11 @@ namespace MyProject  // Example namespace
 {
     public interface IDataService
     {
-        Employee GetData();
+        Employee GetData(int summarycount);
+    }
+    public interface IDataServices2
+    {
+        Employee GetSummaryData(int summarycount);
     }
 
     public class Employee
@@ -17,20 +21,27 @@ namespace MyProject  // Example namespace
     public class MyService
     {
         private readonly IDataService _dataService;
+        private readonly IDataServices2 _dataService2;
 
-        public MyService(IDataService dataService)
+        public MyService(IDataService dataService, IDataServices2 dataService2)
         {
             _dataService = dataService;
+            _dataService2 = dataService2;
         }
 
         public Employee ProcessData(IDataService dataService)
         {
-            return _dataService.GetData();
+            return _dataService.GetData(10);
+        }
+
+        public Employee ProcessDataSummaryData(IDataServices2 dataService)
+        {
+            return _dataService2.GetSummaryData(10);
         }
 
         public void LogData(IDataService dataService)
         {
-            var data = dataService.GetData();
+            var data = dataService.GetData(20);
             // ... logging logic
         }
     }
