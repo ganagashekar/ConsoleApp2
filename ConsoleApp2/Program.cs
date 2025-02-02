@@ -180,7 +180,7 @@ public class {testClassName}
 
             if (returnTypeName == "void")
             {
-                setupCode = $"mock{mockName}.Setup(x => x.{methodName}(";
+                setupCode = $"{mockName}.Setup(x => x.{methodName}(";
 
                 // Handle parameters
                 for (int i = 0; i < parameterTypes.Length; i++)
@@ -199,7 +199,7 @@ public class {testClassName}
                 string elementTypeName = returnTypeName.Substring(0, returnTypeName.Length - 2);
                 string defaultValue = GetDefaultValue(elementTypeName);
 
-                setupCode = $"mock{mockName}.Setup(x => x.{methodName}(";
+                setupCode = $"{mockName}.Setup(x => x.{methodName}(";
 
                 // Handle parameters
                 for (int i = 0; i < parameterTypes.Length; i++)
@@ -226,8 +226,7 @@ public class {testClassName}
 
                     string initializationCode = InitializePropertiesRecursively(returnObjectName, type, tyepss); // Get the initialization code
                     setupCode += initializationCode;
-                    string setupCodetest = $@"
-mock{mockName}.Setup(x => x.{methodName}(";
+                    string setupCodetest = $@"{mockName}.Setup(x => x.{methodName}(";
 
                     // Handle parameters
                     for (int i = 0; i < parameterTypes.Length; i++)
@@ -243,8 +242,10 @@ mock{mockName}.Setup(x => x.{methodName}(";
                     setupCodetest += $")).Returns(() => {{  return {returnObjectName}; }});\n"; // Initialization code is now *used*
 
                     // Add the return object to the Arrange section for use in Assert
-                    setupCode += $"{returnTypeName} expected{TestMethodName} = {returnObjectName};\n"; // For use in Assert
-                    setupCode += setupCodetest;
+                    // setupCode += $"{returnTypeName} expected{TestMethodName} = {returnObjectName};\n"; // For use in Assert
+                    setupCode += $"{returnTypeName} expected_results = {returnObjectName};\n"; // For use in Assert
+                    
+                     setupCode += setupCodetest;
 
 
                     //                    var lambdaBody = new StringBuilder();
@@ -402,27 +403,64 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
                 if (IsInterface(typeName))
                 {
-                    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
-                    if (typeName == "IDataService")
+
+
+                    string mockVariableName = $"mock{parameter.Identifier.Text}";
+
+                    // *** Correctly pass method parameter types to GenerateMockSetup ***
+                    var methodParams = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString()).ToArray();
+                    var returnType = methodDeclaration.ReturnType;
+
+                    // *** Dynamic Logic for Mock Setup ***
+                    // 1. Get the interface type
+                    var interfaceType = Type.GetType(typeName);
+
+                    var tyepss = assembly.GetTypes();
+                    var type = tyepss.Where(x => x.Name == typeName).FirstOrDefault();// assembly.GetType("MyProject."+typeName); // Now get the type
+
+
+
+
+                    if (type != null)
                     {
-                        //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
+                        // 2. Find the methods of the interface
+                        var interfaceMethods = type.GetMethods();
 
-
-                        // Generate the mock variable name for setup
-                        string mockVariableName = $"mock{parameter.Identifier.Text}";
-                        if (methodDeclaration.Identifier.Text == "ProcessData")
+                        // 3. Iterate through the interface methods and generate mock setups
+                        foreach (var interfaceMethod in interfaceMethods)
                         {
-                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
-                        }
-                        else if (methodDeclaration.Identifier.Text == "LogData")
-                        {
-                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
-                        }
-                        // arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+                            var interfaceMethodParams = interfaceMethod.GetParameters().Select(p => p.ParameterType.Name).ToArray();
 
-                        //arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
-
+                            // Generate mock setup for *each* method of the interface.
+                            // You might want to add logic here to *filter* methods if needed.
+                            arrangeCode += GenerateMockSetup(mockVariableName, interfaceMethod.Name, interfaceMethod.Name,methodDeclaration.ReturnType, interfaceMethodParams);
+                        }
                     }
+                    else
+                    {
+                        arrangeCode += $"// WARNING: Could not load type {typeName} for dynamic mock setup.\n";
+                    }
+                    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
+                    //if (typeName == "IDataService")
+                    //{
+                    //    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
+
+
+                    //    // Generate the mock variable name for setup
+                    //    string mockVariableName = $"mock{parameter.Identifier.Text}";
+                    //    if (methodDeclaration.Identifier.Text == "ProcessData")
+                    //    {
+                    //        arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
+                    //    }
+                    //    else if (methodDeclaration.Identifier.Text == "LogData")
+                    //    {
+                    //        arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
+                    //    }
+                    //    // arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+
+                    //    //arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+
+                    //}
 
                     arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
 
@@ -657,7 +695,9 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             if (methodDeclaration.ReturnType.ToString() != "void")
             {
-                var expectedmain = $"expected{methodDeclaration.Identifier.Text}";
+                //var expectedmain = $"expected{methodDeclaration.Identifier.Text}";
+                var expectedmain = $"expected_results";
+
                 if (expectedValue != null)
                 {
                     assertCode = $"Assert.Equal({expectedValue}, result);";
