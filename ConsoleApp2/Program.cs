@@ -165,7 +165,7 @@ public class {testClassName}
 
             return initializationCode;
         }
-       
+
         private static string GenerateMockSetup(string mockName, string methodName, string TestMethodName, TypeSyntax returnType, params string[] parameterTypes)
         {
 
@@ -217,7 +217,7 @@ public class {testClassName}
             else if (type != null)
             {
 
-               // Type returnTypeType = Type.GetType(returnTypeName);
+                // Type returnTypeType = Type.GetType(returnTypeName);
                 if (type != null)
                 {
 
@@ -367,7 +367,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                     var parameterType = parameter.ParameterType;
                     if (parameterType.IsInterface)
                     {
-                        arrangeCode += $"{parameterType.Name} mock{parameter.Name} = new Mock<{parameterType.Name}>().Object;\n"; // Declaration and initialization
+                        arrangeCode += $"Mock<{parameterType.Name}> mock{parameter.Name} = new Mock<{parameterType.Name}>();\n"; // Declaration and initialization
                     }
                     else
                     {
@@ -388,7 +388,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                 }
 
 
-                
+
 
             }
             else
@@ -416,15 +416,15 @@ mock{mockName}.Setup(x => x.{methodName}(";
                         }
                         else if (methodDeclaration.Identifier.Text == "LogData")
                         {
-                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData",methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
+                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
                         }
                         // arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
 
-                        arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+                        //arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
 
                     }
 
-                    //arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
+                    arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
 
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
@@ -439,7 +439,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                     {
 
                         arrangeCode += $"{typeName} {parameter.Identifier.Text} = new {typeName}();\n";
-                        
+
                         if (type != null)
                         {
                             arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type, tyepss);
@@ -449,7 +449,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                             arrangeCode += $"// WARNING: Could not load type {typeName} for property initialization. Ensure the assembly is loaded.\n";
                         }
 
-                        
+
 
 
                     }
@@ -480,7 +480,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
                 if (parameterType.IsInterface)
                 {
-                    arrangeCode += $"mock{parameter.Name}"; // Use the mock object directly
+                    arrangeCode += $"mock{parameter.Name}.Object"; // Use the mock object directly
                 }
                 else
                 {
@@ -562,21 +562,21 @@ mock{mockName}.Setup(x => x.{methodName}(";
                 // Instance method call - use the instance created in Arrange
 
                 // *** KEY CHANGE: Pass constructor parameters to MyService in Act ***
-                actCode += $"var result = new {className}(";
+                //actCode += $"var result = new {className}(";
 
-                bool firstParameter = true;
-                foreach (var parameter in parameters)
-                {
-                    if (!firstParameter)
-                    {
-                        actCode += ", ";
-                    }
+                //bool firstParameter = true;
+                //foreach (var parameter in parameters)
+                //{
+                //    if (!firstParameter)
+                //    {
+                //        actCode += ", ";
+                //    }
 
-                    actCode += parameter.Identifier.Text;
-                    firstParameter = false;
-                }
-                actCode += $").{methodName}(";  // Call the method on the newly created instance
-
+                //    actCode += parameter.Identifier.Text;
+                //    firstParameter = false;
+                //}
+                //actCode += $").{methodName}(";  // Call the method on the newly created instance
+                actCode += $"var result={className.ToLower()}Instance.{methodName}(";
             }
 
 

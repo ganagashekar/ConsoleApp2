@@ -58,7 +58,28 @@ namespace MyProject.Tests
             //Assert.AreEqual(expectedProcessData, result);
 
 
+            // Arrange
+            Mock<IDataService> mockdataService = new Mock<IDataService>();
+            Mock<IDataServices2> mockdataService2 = new Mock<IDataServices2>();
+            Employee dataServiceReturnGetData = Activator.CreateInstance<Employee>();
+            dataServiceReturnGetData.Id = 5264;
+            dataServiceReturnGetData.Name = "tKvlD73whvlQSUWZhr5B, welcome!";
+            dataServiceReturnGetData.Description = "QaeDaM6r56QNyurzmhe0, welcome!";
+            Employee expectedProcessData = dataServiceReturnGetData;
 
+            mockdataService.Setup(x => x.GetData()).Returns(() => { return dataServiceReturnGetData; });
+            var dataService = mockdataService.Object;
+
+            var myserviceInstance = new MyService(mockdataService.Object, mockdataService2.Object);
+
+
+
+            // Act
+            var result = myserviceInstance.ProcessData(dataService);
+
+
+            // Assert
+            Assert.AreEqual(expectedProcessData, result);
         }
     }
 }
