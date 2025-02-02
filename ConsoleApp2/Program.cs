@@ -166,7 +166,7 @@ public class {testClassName}
             return initializationCode;
         }
        
-        private static string GenerateMockSetup(string mockName, string methodName, TypeSyntax returnType, params string[] parameterTypes)
+        private static string GenerateMockSetup(string mockName, string methodName, string TestMethodName, TypeSyntax returnType, params string[] parameterTypes)
         {
 
             string setupCode = "";
@@ -243,7 +243,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                     setupCodetest += $")).Returns(() => {{  return {returnObjectName}; }});\n"; // Initialization code is now *used*
 
                     // Add the return object to the Arrange section for use in Assert
-                    setupCode += $"{returnTypeName} expected{methodName} = {returnObjectName};\n"; // For use in Assert
+                    setupCode += $"{returnTypeName} expected{TestMethodName} = {returnObjectName};\n"; // For use in Assert
                     setupCode += setupCodetest;
 
 
@@ -347,18 +347,23 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
                 if (IsInterface(typeName))
                 {
-
+                    arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
                     if (typeName == "IDataService")
                     {
+                        
+
+                        // Generate the mock variable name for setup
+                        string mockVariableName = $"mock{parameter.Identifier.Text}";
                         if (methodDeclaration.Identifier.Text == "ProcessData")
                         {
-                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.ReturnType);
+                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
                         }
                         else if (methodDeclaration.Identifier.Text == "LogData")
                         {
-                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.ReturnType);
+                            arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData",methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
                         }
                     }
+
                     arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
                     
                 }
@@ -481,7 +486,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             if (methodDeclaration.ReturnType.ToString() != "void")
             {
-                var expectedmain = $"expected{methodDeclaration.Identifier.Text}\n";
+                var expectedmain = $"expected{methodDeclaration.Identifier.Text}";
                 if (expectedValue != null)
                 {
                     assertCode = $"Assert.Equal({expectedValue}, result);";
