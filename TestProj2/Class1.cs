@@ -44,6 +44,11 @@ namespace MyProject  // Example namespace
             var data = dataService.GetData(20);
             // ... logging logic
         }
+
+        public int Sum(int a, int b)
+        {
+            return a + b;
+        }
     }
 
 

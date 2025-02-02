@@ -49,83 +49,7 @@ public class {testClassName}
             return unitTestCode;
         }
 
-        //    private static string GenerateArrangeSection(MethodDeclarationSyntax methodDeclaration)
-        //    {
 
-        //        //// ... Inside GenerateArrangeSection, where you get the type:
-        //        //var type = Type.GetType("YourNamespace.Person, YourAssembly"); // Replace with actual namespace and assembly name
-
-        //        //// Example: If your Person class is in the MyProject namespace and MyLibrary assembly:
-        //        //var type = Type.GetType("MyProject.Person, MyLibrary");
-
-        //        //var type = Type.GetType("MyProject.Person, TestNamespaces");
-        //        string arrangeCode = "";
-        //        var parameters = methodDeclaration.ParameterList.Parameters;
-
-        //        var theoryAttribute = methodDeclaration.AttributeLists
-        //            .SelectMany(al => al.Attributes)
-        //            .FirstOrDefault(a => a.Name.ToString() == "Theory");
-
-        //        if (theoryAttribute != null)
-        //        {
-        //            // ... (Theory/InlineData handling remains the same - see previous responses)
-        //        }
-
-        //        foreach (var parameter in parameters)
-        //        {
-        //            var typeName = parameter.Type.ToString();
-
-        //            if (!IsInterface(typeName) && !IsPredefinedType(typeName))
-        //            {
-        //                arrangeCode += $"var {parameter.Identifier.Text} = new {typeName}();\n";
-
-        //                var type = Type.GetType(typeName);
-        //                if (type == null)
-        //                {
-        //                    //type = Type.GetType("TestNamespaces.Person, ConsoleApp2");
-
-        //                    var callingAssembly = Assembly.GetCallingAssembly();
-        //                     type = callingAssembly.GetType("Person");
-        //                }// Requires fully qualified name if not in same assembly!
-        //                else if (type != null)
-        //                {
-        //                    var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        //                    foreach (var property in properties)
-        //                    {
-        //                        var propertyType = property.PropertyType.ToString();
-        //                        var defaultValue = GetDefaultValue(propertyType);
-        //                        arrangeCode += $"{parameter.Identifier.Text}.{property.Name} = {defaultValue};\n";
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    arrangeCode += $"// WARNING: Could not load type {typeName} for property initialization. Ensure the assembly is loaded.\n";
-        //                }
-
-        //            }
-        //            else
-        //            {
-        //                arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
-        //            }
-        //        }
-
-        //        string singleTestMethod = $@"
-        //[Fact]
-        //public void {methodDeclaration.Identifier.Text}Test()
-        //{{
-        //    // Arrange
-        //    {arrangeCode}
-
-        //    // Act
-        //    {GenerateActSection(GetClassName(methodDeclaration), methodDeclaration.Identifier.Text, methodDeclaration)}
-
-        //    // Assert
-        //    {GenerateAssertSection(methodDeclaration, null, null, 0)} 
-        //}}";
-
-        //        return singleTestMethod;
-        //    }
         private static string InitializePropertiesRecursively(string objectName, Type type, Type[] tyepss, string currentPath = "")
         {
             string initializationCode = "";
@@ -244,64 +168,9 @@ public class {testClassName}
                     // Add the return object to the Arrange section for use in Assert
                     // setupCode += $"{returnTypeName} expected{TestMethodName} = {returnObjectName};\n"; // For use in Assert
                     setupCode += $"{returnTypeName} expected_results = {returnObjectName};\n"; // For use in Assert
-                    
-                     setupCode += setupCodetest;
 
+                    setupCode += setupCodetest;
 
-                    //                    var lambdaBody = new StringBuilder();
-
-                    //                    // Declare the return object *outside* the lambda (but still within the setup method)
-                    //                    lambdaBody.AppendLine($"{returnTypeName} returnObject;");
-
-                    //                    lambdaBody.AppendLine($"returnObject = Activator.CreateInstance<{returnTypeName}>();"); // Initialize inside the lambda
-
-                    //                    string initializationCode = InitializePropertiesRecursively("returnObject", type, tyepss);
-                    //                    lambdaBody.Append(initializationCode); // Append the initialization code
-
-                    //                    lambdaBody.AppendLine("return returnObject;");
-
-
-                    //                    setupCode = $@"
-                    //mock{mockName}.Setup(x => x.{methodName}(";
-
-                    //                    // Handle parameters
-                    //                    for (int i = 0; i < parameterTypes.Length; i++)
-                    //                    {
-                    //                        setupCode += $"It.IsAny<{parameterTypes[i]}>()";
-                    //                        if (i < parameterTypes.Length - 1)
-                    //                        {
-                    //                            setupCode += ", ";
-                    //                        }
-                    //                    }
-
-                    //                    setupCode += $")).Returns(() => {{{lambdaBody.ToString()}}});\n"; // Use the built lambda body
-
-
-                    //                    // *** Corrected and Improved Lambda Expression using StringBuilder ***
-                    //                    var lambdaBody = new StringBuilder();
-
-                    //                    lambdaBody.AppendLine($"{returnTypeName} returnObject = Activator.CreateInstance<{returnTypeName}>();");
-
-                    //                    string initializationCode = InitializePropertiesRecursively("returnObject", type, tyepss);
-                    //                    lambdaBody.Append(initializationCode); // Append the initialization code
-
-                    //                    lambdaBody.AppendLine("return returnObject;");
-
-
-                    //                    setupCode = $@"
-                    //mock{mockName}.Setup(x => x.{methodName}(";
-
-                    //                    // Handle parameters
-                    //                    for (int i = 0; i < parameterTypes.Length; i++)
-                    //                    {
-                    //                        setupCode += $"It.IsAny<{parameterTypes[i]}>()";
-                    //                        if (i < parameterTypes.Length - 1)
-                    //                        {
-                    //                            setupCode += ", ";
-                    //                        }
-                    //                    }
-
-                    //                    setupCode += $")).Returns(() => {{{lambdaBody.ToString()}}});\n"; // Use the built lambda body
                 }
             }
             else
@@ -433,34 +302,14 @@ public class {testClassName}
 
                             // Generate mock setup for *each* method of the interface.
                             // You might want to add logic here to *filter* methods if needed.
-                            arrangeCode += GenerateMockSetup(mockVariableName, interfaceMethod.Name, interfaceMethod.Name,methodDeclaration.ReturnType, interfaceMethodParams);
+                            arrangeCode += GenerateMockSetup(mockVariableName, interfaceMethod.Name, interfaceMethod.Name, methodDeclaration.ReturnType, interfaceMethodParams);
                         }
                     }
                     else
                     {
                         arrangeCode += $"// WARNING: Could not load type {typeName} for dynamic mock setup.\n";
                     }
-                    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
-                    //if (typeName == "IDataService")
-                    //{
-                    //    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
-
-
-                    //    // Generate the mock variable name for setup
-                    //    string mockVariableName = $"mock{parameter.Identifier.Text}";
-                    //    if (methodDeclaration.Identifier.Text == "ProcessData")
-                    //    {
-                    //        arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
-                    //    }
-                    //    else if (methodDeclaration.Identifier.Text == "LogData")
-                    //    {
-                    //        arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData", methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
-                    //    }
-                    //    // arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
-
-                    //    //arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
-
-                    //}
+                    
 
                     arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
 
@@ -597,23 +446,7 @@ public class {testClassName}
             }
             else
             {
-                // Instance method call - use the instance created in Arrange
-
-                // *** KEY CHANGE: Pass constructor parameters to MyService in Act ***
-                //actCode += $"var result = new {className}(";
-
-                //bool firstParameter = true;
-                //foreach (var parameter in parameters)
-                //{
-                //    if (!firstParameter)
-                //    {
-                //        actCode += ", ";
-                //    }
-
-                //    actCode += parameter.Identifier.Text;
-                //    firstParameter = false;
-                //}
-                //actCode += $").{methodName}(";  // Call the method on the newly created instance
+                
                 actCode += $"var result={className.ToLower()}Instance.{methodName}(";
             }
 
@@ -634,59 +467,7 @@ public class {testClassName}
 
             return actCode;
 
-            //string actCode = "";
-            //var parameters = methodDeclaration.ParameterList.Parameters;
-
-            //// Check if the method is static
-            //bool isStatic = methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
-
-            //if (isStatic)
-            //{
-            //    // Static method call
-            //    actCode += $"var result = {className}.{methodName}(";
-            //}
-            //else
-            //{
-            //    // Instance method call - use the instance created in Arrange
-            //    actCode += $"var result = {className.ToLower()}Instance.{methodName}("; // Use the instance
-            //}
-
-
-            //bool firstParameter = true;
-            //foreach (var parameter in parameters)
-            //{
-            //    if (!firstParameter)
-            //    {
-            //        actCode += ", ";
-            //    }
-
-            //    actCode += parameter.Identifier.Text;
-            //    firstParameter = false;
-            //}
-
-            //actCode += ");\n";
-
-            //return actCode;
-
-            //var classDeclaration = methodDeclaration.Parent as ClassDeclarationSyntax;
-
-            //if (classDeclaration != null)
-            //{
-            //    if (methodDeclaration.ReturnType.ToString() != "void")
-            //    {
-            //        actCode = $"var result = new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-            //    }
-            //    else
-            //    {
-            //        actCode = $"new {classDeclaration.Identifier.Text}().{methodName}({parameters});\n";
-            //    }
-            //}
-            //else
-            //{
-            //    actCode = "// Error: Could not determine class name.\n";
-            //}
-
-            //return actCode;
+            
         }
 
         private static string GenerateAssertSection(MethodDeclarationSyntax methodDeclaration, string expectedValue, List<string> parameterNames, int argumentCount)
@@ -944,20 +725,30 @@ public class {testClassName}
             //Console.WriteLine($"Unit tests saved to: {filePath}");
 
 
+            //string unitTest = CodeAligner.AlignAssignments(GenerateUnitTest(code, className, methodName));
+            //Console.WriteLine(unitTest);
+
+            //string filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{className}Tests.cs");
+            //File.WriteAllText(filePath, unitTest);
+            //Console.WriteLine($"Unit tests saved to: {filePath}");
+
+            //methodName = "LogData";
+            //unitTest = GenerateUnitTest(code, className, methodName);
+            //Console.WriteLine(unitTest);
+
+            
+            methodName = "ProcessDataSummaryData";
             string unitTest = GenerateUnitTest(code, className, methodName);
             Console.WriteLine(unitTest);
 
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{className}Tests.cs");
-            File.WriteAllText(filePath, unitTest);
-            Console.WriteLine($"Unit tests saved to: {filePath}");
 
-            methodName = "LogData";
-            unitTest = GenerateUnitTest(code, className, methodName);
-            Console.WriteLine(unitTest);
 
-            filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{className}Tests.cs");
-            File.AppendAllText(filePath, unitTest);
-            Console.WriteLine($"Unit tests saved to: {filePath}");
+            //methodName = "Sum";
+            //unitTest = GenerateUnitTest(code, className, methodName);
+            //Console.WriteLine(unitTest);
+            //filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{className}Tests.cs");
+            //File.AppendAllText(filePath, unitTest);
+            //Console.WriteLine($"Unit tests saved to: {filePath}");
 
         }
     }
