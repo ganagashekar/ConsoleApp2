@@ -237,7 +237,7 @@ public class {testClassName}
                     var parameterType = parameter.ParameterType;
                     if (parameterType.IsInterface)
                     {
-                        arrangeCode += $"Mock<{parameterType.Name}> mock{parameter.Name} = new Mock<{parameterType.Name}>();\n"; // Declaration and initialization
+                        arrangeCode += $"Mock<{parameterType.Name}> mock{parameterType.Name} = new Mock<{parameterType.Name}>();\n"; // Declaration and initialization
                     }
                     else
                     {
@@ -274,7 +274,7 @@ public class {testClassName}
                 {
 
 
-                    string mockVariableName = $"mock{parameter.Identifier.Text}";
+                    string mockVariableName = $"mock{typeName}";
 
                     // *** Correctly pass method parameter types to GenerateMockSetup ***
                     var methodParams = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString()).ToArray();
@@ -311,7 +311,7 @@ public class {testClassName}
                     }
                     
 
-                    arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
+                    arrangeCode += $"var Obj{mockVariableName} = {mockVariableName}.Object;\n";
 
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
@@ -367,7 +367,7 @@ public class {testClassName}
 
                 if (parameterType.IsInterface)
                 {
-                    arrangeCode += $"mock{parameter.Name}.Object"; // Use the mock object directly
+                    arrangeCode += $"mock{parameter.ParameterType.Name}.Object"; // Use the mock object directly
                 }
                 else
                 {
@@ -459,7 +459,7 @@ public class {testClassName}
                     actCode += ", ";
                 }
 
-                actCode += parameter.Identifier.Text;
+                actCode += $"Objmock{parameter.Type.ToString()}";// parameter.Identifier.Text;
                 firstParameterCall = false;
             }
 

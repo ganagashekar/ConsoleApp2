@@ -8,7 +8,7 @@ namespace MyProject  // Example namespace
     }
     public interface IDataServices2
     {
-        Employee GetSummaryData(int summarycount);
+        Employee GetSummaryData(int summarycount,string teststring );
     }
 
     public class Employee
@@ -34,9 +34,9 @@ namespace MyProject  // Example namespace
             return _dataService.GetData(10);
         }
 
-        public Employee ProcessDataSummaryData(IDataServices2 dataService)
+        public Employee ProcessDataSummaryData(IDataServices2 dataService,string test)
         {
-            return _dataService2.GetSummaryData(10);
+            return _dataService2.GetSummaryData(10, test);
         }
 
         public void LogData(IDataService dataService)
