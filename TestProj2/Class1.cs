@@ -1,10 +1,17 @@
 ﻿using System.IO;
 
-namespace TestProj2  // Example namespace
+namespace MyProject  // Example namespace
 {
     public interface IDataService
     {
-        string GetData();
+        Employee GetData();
+    }
+
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
 
     public class MyService
@@ -16,15 +23,19 @@ namespace TestProj2  // Example namespace
             _dataService = dataService;
         }
 
-        public string ProcessData()
+        public Employee ProcessData(IDataService dataService)
         {
-            return _dataService.GetData().ToUpper();
+            return _dataService.GetData();
         }
 
         public void LogData(IDataService dataService)
         {
-            string data = dataService.GetData();
+            var data = dataService.GetData();
             // ... logging logic
         }
     }
+
+
+
+
 }

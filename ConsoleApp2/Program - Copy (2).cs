@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Security.AccessControl;
-using System.Text;
 using System.Xml.Linq;
 
 namespace TestNamespaces
@@ -165,14 +164,44 @@ public class {testClassName}
 
             return initializationCode;
         }
-       
+        private static string InitializePropertiesRecursivelyTest(string objectName, Type type, string currentPath = "")
+{
+    string initializationCode = "";
+    var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+    foreach (var property in properties)
+    {
+        var propertyType = property.PropertyType;
+        var propertyName = property.Name;
+
+        string fullPath = string.IsNullOrEmpty(currentPath) ? propertyName : $"{currentPath}.{propertyName}";
+
+        if (!IsInterface(propertyType.Name) && !IsPredefinedType(propertyType.Name) && !propertyType.IsArray)
+        {
+            var nestedObject = Activator.CreateInstance(propertyType);
+            initializationCode += $"{objectName}.{fullPath} = {nestedObject};\n";
+            initializationCode += InitializePropertiesRecursively(objectName, propertyType, fullPath);
+        }
+        else if (propertyType.IsArray)
+        {
+            // ... (Array handling - same as before)
+        }
+        else
+        {
+            var defaultValue = GetDefaultValue(propertyType.Name);
+            initializationCode += $"{objectName}.{fullPath} = {defaultValue};\n";
+        }
+    }
+
+    return initializationCode;
+}
         private static string GenerateMockSetup(string mockName, string methodName, TypeSyntax returnType, params string[] parameterTypes)
         {
 
             string setupCode = "";
             string returnTypeName = returnType.ToString();
             Assembly assembly;
-            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\MyProject.dll");
+            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\TestProj2.dll");
 
             var tyepss = assembly.GetTypes();
             var type = tyepss.Where(x => x.Name == returnTypeName).FirstOrDefault();// assembly.GetType("MyProject."+typeName); // Now get the type
@@ -217,91 +246,11 @@ public class {testClassName}
             else if (type != null)
             {
 
-               // Type returnTypeType = Type.GetType(returnTypeName);
-                if (type != null)
-                {
-
-                    string returnObjectName = $"{mockName}Return{methodName}"; // Unique name
-                    setupCode += $"{returnTypeName} {returnObjectName} = Activator.CreateInstance<{returnTypeName}>();\n"; // Initialization here
-
-                    string initializationCode = InitializePropertiesRecursively(returnObjectName, type, tyepss); // Get the initialization code
-                    setupCode += initializationCode;
-                    string setupCodetest = $@"
-mock{mockName}.Setup(x => x.{methodName}(";
-
-                    // Handle parameters
-                    for (int i = 0; i < parameterTypes.Length; i++)
-                    {
-                        setupCodetest += $"It.IsAny<{parameterTypes[i]}>()";
-                        if (i < parameterTypes.Length - 1)
-                        {
-                            setupCodetest += ", ";
-                        }
-                    }
-
-                    // Lambda now includes the initialization code
-                    setupCodetest += $")).Returns(() => {{  return {returnObjectName}; }});\n"; // Initialization code is now *used*
-
-                    // Add the return object to the Arrange section for use in Assert
-                    setupCode += $"{returnTypeName} expected{methodName} = {returnObjectName};\n"; // For use in Assert
-                    setupCode += setupCodetest;
 
 
-                    //                    var lambdaBody = new StringBuilder();
 
-                    //                    // Declare the return object *outside* the lambda (but still within the setup method)
-                    //                    lambdaBody.AppendLine($"{returnTypeName} returnObject;");
+                
 
-                    //                    lambdaBody.AppendLine($"returnObject = Activator.CreateInstance<{returnTypeName}>();"); // Initialize inside the lambda
-
-                    //                    string initializationCode = InitializePropertiesRecursively("returnObject", type, tyepss);
-                    //                    lambdaBody.Append(initializationCode); // Append the initialization code
-
-                    //                    lambdaBody.AppendLine("return returnObject;");
-
-
-                    //                    setupCode = $@"
-                    //mock{mockName}.Setup(x => x.{methodName}(";
-
-                    //                    // Handle parameters
-                    //                    for (int i = 0; i < parameterTypes.Length; i++)
-                    //                    {
-                    //                        setupCode += $"It.IsAny<{parameterTypes[i]}>()";
-                    //                        if (i < parameterTypes.Length - 1)
-                    //                        {
-                    //                            setupCode += ", ";
-                    //                        }
-                    //                    }
-
-                    //                    setupCode += $")).Returns(() => {{{lambdaBody.ToString()}}});\n"; // Use the built lambda body
-
-
-                    //                    // *** Corrected and Improved Lambda Expression using StringBuilder ***
-                    //                    var lambdaBody = new StringBuilder();
-
-                    //                    lambdaBody.AppendLine($"{returnTypeName} returnObject = Activator.CreateInstance<{returnTypeName}>();");
-
-                    //                    string initializationCode = InitializePropertiesRecursively("returnObject", type, tyepss);
-                    //                    lambdaBody.Append(initializationCode); // Append the initialization code
-
-                    //                    lambdaBody.AppendLine("return returnObject;");
-
-
-                    //                    setupCode = $@"
-                    //mock{mockName}.Setup(x => x.{methodName}(";
-
-                    //                    // Handle parameters
-                    //                    for (int i = 0; i < parameterTypes.Length; i++)
-                    //                    {
-                    //                        setupCode += $"It.IsAny<{parameterTypes[i]}>()";
-                    //                        if (i < parameterTypes.Length - 1)
-                    //                        {
-                    //                            setupCode += ", ";
-                    //                        }
-                    //                    }
-
-                    //                    setupCode += $")).Returns(() => {{{lambdaBody.ToString()}}});\n"; // Use the built lambda body
-                }
             }
             else
             {
@@ -326,12 +275,6 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             return setupCode;
         }
-        private static T CreateAndInitialize<T>(Type type, Type[] tyepss) where T : class
-        {
-            T returnObject = Activator.CreateInstance<T>();
-            InitializePropertiesRecursively("returnObject", type, tyepss);
-            return returnObject;
-        }
         private static string GenerateArrangeSection(MethodDeclarationSyntax methodDeclaration)
         {
             string arrangeCode = "";
@@ -339,7 +282,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             // ... (Theory attribute handling - if applicable)
             Assembly assembly;
-            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\MyProject.dll");
+            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\TestProj2.dll");
 
             foreach (var parameter in parameters)
             {
@@ -360,7 +303,16 @@ mock{mockName}.Setup(x => x.{methodName}(";
                         }
                     }
                     arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
-                    
+                    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n";
+
+                    // *** IMPORTANT: Set up mock behavior here ***
+                    // Example (replace with your actual setup):
+                    // if (typeName == "IDataService")
+                    // {
+                    //     arrangeCode += $"mock{parameter.Identifier.Text}.Setup(x => x.GetData()).Returns(\"Mocked Data\");\n";
+                    // }
+
+                    // arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
                 {
@@ -481,7 +433,6 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
             if (methodDeclaration.ReturnType.ToString() != "void")
             {
-                var expectedmain = $"expected{methodDeclaration.Identifier.Text}\n";
                 if (expectedValue != null)
                 {
                     assertCode = $"Assert.Equal({expectedValue}, result);";
@@ -496,20 +447,7 @@ mock{mockName}.Setup(x => x.{methodName}(";
                     }
                     else
                     {
-                        Assembly assembly;
-                        assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\MyProject.dll");
-
-                        var tyepss = assembly.GetTypes();
-                        var type = tyepss.Where(x => x.Name == returnValueType).FirstOrDefault();// assembly.GetType("MyProject."+typeName); // Now get the type
-                        if (type != null)
-                        {
-                            expectedValue = expectedmain;
-                        }
-                        else
-                        {
-
-                            expectedValue = GetExpectedValue(methodDeclaration.ReturnType);
-                        }
+                        expectedValue = GetExpectedValue(methodDeclaration.ReturnType);
                         assertCode = $"Assert.Equal({expectedValue}, result);";
                     }
                 }

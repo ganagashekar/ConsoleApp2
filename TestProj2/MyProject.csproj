@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Class1 - Copy.cs" />
+  </ItemGroup>
+
 </Project>
