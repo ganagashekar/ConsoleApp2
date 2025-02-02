@@ -329,7 +329,12 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
         private static ConstructorInfo GetConstructor(string className)
         {
-            var type = Type.GetType(className);
+            //var type = Type.GetType(className);
+            Assembly assembly;
+            assembly = Assembly.LoadFrom("C:\\Users\\ganga\\source\\repos\\ConsoleApp2\\TestProj2\\bin\\Debug\\net8.0\\MyProject.dll");
+
+            var tyepss = assembly.GetTypes();
+            var type = tyepss.Where(x => x.Name == className).FirstOrDefault();
             if (type != null)
             {
                 return type.GetConstructors().FirstOrDefault(); // Get the first constructor (you can add logic to choose a specific one)
@@ -358,10 +363,11 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
                 if (IsInterface(typeName))
                 {
-                    arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
+                    //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
                     if (typeName == "IDataService")
                     {
-                        
+                        arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n"; // Corrected Line
+
 
                         // Generate the mock variable name for setup
                         string mockVariableName = $"mock{parameter.Identifier.Text}";
@@ -373,11 +379,14 @@ mock{mockName}.Setup(x => x.{methodName}(";
                         {
                             arrangeCode += GenerateMockSetup(parameter.Identifier.Text, "GetData",methodDeclaration.Identifier.Text, methodDeclaration.ReturnType);
                         }
+                        // arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+
                         arrangeCode += $"{typeName} {parameter.Identifier.Text} = {mockVariableName}.Object;\n"; // Corrected Line
+
                     }
-                     
+
                     //arrangeCode += $"var {parameter.Identifier.Text} = mock{parameter.Identifier.Text}.Object;\n";
-                    
+
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
                 {
@@ -389,24 +398,37 @@ mock{mockName}.Setup(x => x.{methodName}(";
 
                     if (!IsInterface(typeName) && !IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
                     {
-                        //arrangeCode += $"var {parameter.Identifier.Text} = new {typeName}();\n";
 
-                        ////var type = Type.GetType(typeName);
-                        //if (type != null)
-                        //{
-                        //    arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type, tyepss); // Call the recursive function
-                        //}
-                        //else
-                        //{
-                        //    arrangeCode += $"// WARNING: Could not load type {typeName} for property initialization. Ensure the assembly is loaded.\n";
-                        //}
+                        arrangeCode += $"{typeName} {parameter.Identifier.Text} = new {typeName}();\n";
+                        //var type = Type.GetType(typeName);
+                        //var type = Type.GetType(typeName);
+                        if (type != null)
+                        {
+                            arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type, tyepss);
+                        }
+                        else
+                        {
+                            arrangeCode += $"// WARNING: Could not load type {typeName} for property initialization. Ensure the assembly is loaded.\n";
+                        }
+
+                        ////arrangeCode += $"var {parameter.Identifier.Text} = new {typeName}();\n";
+
+                        //////var type = Type.GetType(typeName);
+                        ////if (type != null)
+                        ////{
+                        ////    arrangeCode += InitializePropertiesRecursively(parameter.Identifier.Text, type, tyepss); // Call the recursive function
+                        ////}
+                        ////else
+                        ////{
+                        ////    arrangeCode += $"// WARNING: Could not load type {typeName} for property initialization. Ensure the assembly is loaded.\n";
+                        ////}
 
 
-                        arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n";
+                        //arrangeCode += $"var mock{parameter.Identifier.Text} = new Mock<{typeName}>();\n";
 
-                        // *** IMPORTANT: Set up mock behavior here ***
+                        //// *** IMPORTANT: Set up mock behavior here ***
 
-                        // Example for IDataService.GetData():
+                        //// Example for IDataService.GetData():
 
 
                     }
@@ -426,22 +448,73 @@ mock{mockName}.Setup(x => x.{methodName}(";
             var className = GetClassName(methodDeclaration);  // Or however you get the class name
             if (!methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword))
             {
-                arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
 
-                // Add parameters to the constructor call
-                bool firstParameter = true;
-                foreach (var parameter in parameters)
+                var constructor = GetConstructor(className); // Get the constructor info.
+                if (constructor != null)
                 {
-                    if (!firstParameter)
+                    arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
+
+                    bool firstParameter = true;
+                    foreach (var parameter in constructor.GetParameters()) // Iterate over constructor parameters
                     {
-                        arrangeCode += ", ";
+                        if (!firstParameter)
+                        {
+                            arrangeCode += ", ";
+                        }
+
+                        var parameterType = parameter.ParameterType;
+                        var parameterName = parameter.Name;
+
+                        if (parameterType.IsInterface) // Check if constructor parameter is an interface
+                        {
+                            string mockVariableName = $"mock{parameterName}"; // Consistent naming
+                            arrangeCode += $"new Mock<{parameterType.Name}>().Object"; // Create and use the mock object directly
+                        }
+                        else
+                        {
+                            // Handle concrete types. You might need to create instances or use default values.
+                            // Example:
+                            if (parameterType == typeof(string))
+                            {
+                                arrangeCode += $"\"{parameterName}Value\""; // Or some default string value
+                            }
+                            else if (parameterType == typeof(int))
+                            {
+                                arrangeCode += $"123"; // Or some default int value
+                            }
+                            else
+                            {
+                                arrangeCode += $"default({parameterType.Name})"; // Default value for other types
+                            }
+
+                        }
+
+
+                        firstParameter = false;
                     }
 
-                    arrangeCode += parameter.Identifier.Text;
-                    firstParameter = false;
+                    arrangeCode += ");\n\n"; // Close constructor call
                 }
+                else
+                {
+                    arrangeCode += $"// WARNING: Could not find a suitable constructor for {className}.\n";
+                }
+                //arrangeCode += $"\nvar {className.ToLower()}Instance = new {className}(";
 
-                arrangeCode += ");\n\n"; // Close constructor call
+                //// Add parameters to the constructor call
+                //bool firstParameter = true;
+                //foreach (var parameter in parameters)
+                //{
+                //    if (!firstParameter)
+                //    {
+                //        arrangeCode += ", ";
+                //    }
+
+                //    arrangeCode += parameter.Identifier.Text;
+                //    firstParameter = false;
+                //}
+
+                //arrangeCode += ");\n\n"; // Close constructor call
             }
 
             string singleTestMethod = $@"
