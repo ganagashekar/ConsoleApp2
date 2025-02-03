@@ -90,6 +90,33 @@ namespace MyProject.Tests
         }
 
 
+        [TestMethod()]
+        public void ProcessDataSummaryDataTest1()
+        {
+            // Arrange
+            Mock<IDataService> mockIDataService = new Mock<IDataService>();
+            Mock<IDataServices2> mockIDataServices2 = new Mock<IDataServices2>();
+            Employee mockIDataServices2ReturnGetSummaryData = Activator.CreateInstance<Employee>();
+            mockIDataServices2ReturnGetSummaryData.Id = 7981;
+            mockIDataServices2ReturnGetSummaryData.Name = "qeiLjI10mYNC62rQ7bsj, welcome!";
+            mockIDataServices2ReturnGetSummaryData.Description = "E1YHOERenCGkwYSkqSBG, welcome!";
+            Employee expected_results = mockIDataServices2ReturnGetSummaryData;
+            mockIDataServices2.Setup(x => x.GetSummaryData(It.IsAny<Int32>(), It.IsAny<String>())).Returns(() => { return mockIDataServices2ReturnGetSummaryData; });
+            var ObjmockIDataServices2_dataService = mockIDataServices2.Object;
+            var Objmockstring_test = "TestString";
+
+            var myserviceInstance = new MyService(mockIDataService.Object, mockIDataServices2.Object);
+
+
+
+            // Act
+            var result = myserviceInstance.ProcessDataSummaryData(ObjmockIDataServices2_dataService, Objmockstring_test);
+
+
+            // Assert
+            Assert.AreEqual(expected_results, result);
+        }
+
     }
 }
 
