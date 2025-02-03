@@ -12,6 +12,7 @@
     <Compile Remove="Program - Copy %282%29.cs" />
     <Compile Remove="Program - Copy - Copy.cs" />
     <Compile Remove="Program - Copy.cs" />
+    <Compile Remove="Program -Working.cs" />
   </ItemGroup>
 
   <ItemGroup>

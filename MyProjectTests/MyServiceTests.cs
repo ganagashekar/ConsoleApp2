@@ -63,27 +63,26 @@ namespace MyProject.Tests
         }
 
         [TestMethod()]
-        
         public void ProcessDataSummaryDataTest()
         {
             // Arrange
             Mock<IDataService> mockIDataService = new Mock<IDataService>();
             Mock<IDataServices2> mockIDataServices2 = new Mock<IDataServices2>();
             Employee mockIDataServices2ReturnGetSummaryData = Activator.CreateInstance<Employee>();
-            mockIDataServices2ReturnGetSummaryData.Id = 9420;
-            mockIDataServices2ReturnGetSummaryData.Name = "v7MZz0g6SedLGPwfWuNH, welcome!";
-            mockIDataServices2ReturnGetSummaryData.Description = "fTqMhxERwQvetMnWEJg9, welcome!";
+            mockIDataServices2ReturnGetSummaryData.Id = 1712;
+            mockIDataServices2ReturnGetSummaryData.Name = "qvg19Z9l5EGIki2651HL, welcome!";
+            mockIDataServices2ReturnGetSummaryData.Description = "2gsl1RRMB6klK2vAoLVq, welcome!";
             Employee expected_results = mockIDataServices2ReturnGetSummaryData;
             mockIDataServices2.Setup(x => x.GetSummaryData(It.IsAny<Int32>(), It.IsAny<String>())).Returns(() => { return mockIDataServices2ReturnGetSummaryData; });
-            var ObjmockIDataServices2 = mockIDataServices2.Object;
-            var test = "TestString";
+            var ObjmockIDataServices2_dataService = mockIDataServices2.Object;
+            var Objmockstring_test = "TestString";
 
             var myserviceInstance = new MyService(mockIDataService.Object, mockIDataServices2.Object);
 
 
 
             // Act
-            var result = myserviceInstance.ProcessDataSummaryData(ObjmockIDataServices2, Objmockstring);
+            var result = myserviceInstance.ProcessDataSummaryData(ObjmockIDataServices2_dataService, Objmockstring_test);
 
 
             // Assert

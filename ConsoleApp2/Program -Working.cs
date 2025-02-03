@@ -311,7 +311,7 @@ public class {testClassName}
                     }
                     
 
-                    arrangeCode += $"var Obj{mockVariableName}_{parameter.Identifier.Text} = {mockVariableName}.Object;\n";
+                    arrangeCode += $"var Obj{mockVariableName} = {mockVariableName}.Object;\n";
 
                 }
                 else if (!IsPredefinedType(typeName) && !typeName.EndsWith("[]"))
@@ -342,12 +342,12 @@ public class {testClassName}
                     }
                     else
                     {
-                        arrangeCode += $"var Objmock{typeName}_{parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
+                        arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
                     }
                 }
                 else
                 {
-                    arrangeCode += $"var Objmock{typeName}_{parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
+                    arrangeCode += $"var {parameter.Identifier.Text} = {GenerateTestData(parameter.Type)};\n";
                 }
             }
 
@@ -459,7 +459,7 @@ public class {testClassName}
                     actCode += ", ";
                 }
 
-                actCode += $"Objmock{parameter.Type.ToString()}_{parameter.Identifier.Text}";// parameter.Identifier.Text;
+                actCode += $"Objmock{parameter.Type.ToString()}";// parameter.Identifier.Text;
                 firstParameterCall = false;
             }
 
