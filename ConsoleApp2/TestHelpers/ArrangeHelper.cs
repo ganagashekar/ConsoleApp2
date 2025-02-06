@@ -245,7 +245,7 @@ namespace ConsoleApp2.TestHelpers
 
 
             string singleTestMethod = $@"
-    [Fact]
+    [TestMethod()]
     public void {methodDeclaration.Identifier.Text}Test()
     {{
         // Arrange

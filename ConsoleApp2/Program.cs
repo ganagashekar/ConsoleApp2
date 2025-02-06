@@ -29,23 +29,27 @@ namespace TestNamespaces
             {
                 return "Class not found.";
             }
+            string testClassName = $"{className}Tests";
 
-            MethodDeclarationSyntax methodDeclaration = classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.Text == methodName);
-
-            if (methodDeclaration == null)
+            string unitTestCode = $@"public class {testClassName} {{";
+            var methodDeclarations = classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            foreach (var method in methodDeclarations.Where(x => string.IsNullOrEmpty(methodName) || x.Identifier.Text == methodName))
             {
-                return "Method not found.";
+                string testMethodName = $"{method.Identifier.Text}Test";
+                //MethodDeclarationSyntax methodDeclaration = methodDeclarations
+                //.FirstOrDefault(m => m.Identifier.Text == methodName);
+
+                if (method == null)
+                {
+                    return "Method not found.";
+                }
+                else
+                {
+                    unitTestCode += ArrangeHelper.GenerateArrangeSection(method);
+                }
             }
 
-            string testClassName = $"{className}Tests";
-            string testMethodName = $"{methodName}Test";
-
-            string unitTestCode = $@"
-public class {testClassName}
-{{
-    {ArrangeHelper.GenerateArrangeSection(methodDeclaration)}
-}}";
+            unitTestCode += "}";
 
             return unitTestCode;
         }
@@ -107,8 +111,9 @@ public class {testClassName}
             //Console.WriteLine(unitTest);
 
 
-            methodName = "ProcessDataSummaryData";
-            string unitTest = GenerateUnitTest(code, className, methodName);
+            //methodName = "ProcessDataSummaryData";
+            methodName = "";
+            string unitTest = CodeAligner.AlignAssignments(GenerateUnitTest(code, className, methodName));
             Console.WriteLine(unitTest);
 
 

@@ -15,22 +15,34 @@ namespace ConsoleApp2.TestHelpers
 
             string actCode = "";
             var parameters = methodDeclaration.ParameterList.Parameters;
-
-            // Check if the method is static
             bool isStatic = methodDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
+            string returnType = methodDeclaration.ReturnType.ToString(); // Get the return type
 
-            if (isStatic)
+
+            if (returnType != "void") // Check for void return type
             {
-                // Static method call
-                actCode += $"var result = {className}.{methodName}(";
+                if (isStatic)
+                {
+                    actCode += $"var result = {className}.{methodName}(";
+                }
+                else
+                {
+                    actCode += $"var result = {className.ToLower()}Instance.{methodName}(";
+                }
             }
-            else
+            else // Handle void return type
             {
-
-                actCode += $"var result={className.ToLower()}Instance.{methodName}(";
+                if (isStatic)
+                {
+                    actCode += $"{className}.{methodName}("; // No result variable for void methods
+                }
+                else
+                {
+                    actCode += $"{className.ToLower()}Instance.{methodName}(";
+                }
             }
 
-
+            
             bool firstParameterCall = true; // Flag for method call parameters (distinct from constructor parameters)
             foreach (var parameter in parameters)
             {

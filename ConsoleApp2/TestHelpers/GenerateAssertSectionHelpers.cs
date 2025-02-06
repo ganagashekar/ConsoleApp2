@@ -60,7 +60,7 @@ namespace ConsoleApp2.TestHelpers
 
                 if (expectedValue != null)
                 {
-                    assertCode = $"Assert.Equal({expectedValue}, result);";
+                    assertCode = $"Assert.AreEqual({expectedValue}, result);";
                 }
                 else
                 {
@@ -68,7 +68,7 @@ namespace ConsoleApp2.TestHelpers
 
                     if (returnValueType.EndsWith("[]"))
                     {
-                        assertCode = $"Assert.True(result.SequenceEqual(new {returnValueType.Substring(0, returnValueType.Length - 2)}[] {{ {GenerateExpectedArrayValues(parameterNames, argumentCount, returnValueType)} }}));";
+                        assertCode = $"Assert.AreEqual(result.SequenceEqual(new {returnValueType.Substring(0, returnValueType.Length - 2)}[] {{ {GenerateExpectedArrayValues(parameterNames, argumentCount, returnValueType)} }}));";
                     }
                     else
                     {
@@ -86,7 +86,7 @@ namespace ConsoleApp2.TestHelpers
 
                             expectedValue = GetExpectedValue(methodDeclaration.ReturnType);
                         }
-                        assertCode = $"Assert.Equal({expectedValue}, result);";
+                        assertCode = $"Assert.AreEqual({expectedValue}, result);";
                     }
                 }
 

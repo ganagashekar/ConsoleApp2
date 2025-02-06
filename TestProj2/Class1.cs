@@ -4,7 +4,7 @@ namespace MyProject  // Example namespace
 {
     public interface IDataService
     {
-        Employee GetData(int summarycount);
+        Employee GetData(int summarycount,Employee employee);
     }
     public interface IDataServices2
     {
@@ -31,7 +31,7 @@ namespace MyProject  // Example namespace
 
         public Employee ProcessData(IDataService dataService)
         {
-            return _dataService.GetData(10);
+            return _dataService.GetData(10, new Employee());
         }
 
         public Employee ProcessDataSummaryData(IDataServices2 dataService,string test)
@@ -41,14 +41,70 @@ namespace MyProject  // Example namespace
 
         public void LogData(IDataService dataService)
         {
-            var data = dataService.GetData(20);
+            var data = dataService.GetData(20,new Employee());
             // ... logging logic
         }
 
-        public int Sum(int a, int b)
+
+        public Employee ProcessData1(IDataService dataService)
         {
-            return a + b;
+            return _dataService.GetData(10, new Employee());
         }
+
+        public Employee ProcessDataSummaryData1(IDataServices2 dataService, string test)
+        {
+            return _dataService2.GetSummaryData(10, test);
+        }
+
+        public void LogData1(IDataService dataService)
+        {
+            var data = dataService.GetData(20, new Employee());
+            // ... logging logic
+        }
+
+
+
+
+        public Employee ProcessData2(IDataService dataService)
+        {
+            return _dataService.GetData(10, new Employee());
+        }
+
+        public Employee ProcessDataSummaryData2(IDataServices2 dataService, string test)
+        {
+            return _dataService2.GetSummaryData(10, test);
+        }
+
+        //public void LogData(IDataService dataService)
+        //{
+        //    var data = dataService.GetData(20, new Employee());
+        //    // ... logging logic
+        //}
+
+
+
+
+
+        public Employee ProcessData3(IDataService dataService)
+        {
+            return _dataService.GetData(10, new Employee());
+        }
+
+        public Employee ProcessDataSummaryData3(IDataServices2 dataService, string test)
+        {
+            return _dataService2.GetSummaryData(10, test);
+        }
+
+        public void LogData3(IDataService dataService)
+        {
+            var data = dataService.GetData(20, new Employee());
+            // ... logging logic
+        }
+
+        //public int Sum(int a, int b)
+        //{
+        //    return a + b;
+        //}
     }
 
 
